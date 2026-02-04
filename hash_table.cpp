@@ -5,8 +5,7 @@
 #include <algorithm> // for to_lower function
 #include <utility> // for passing string pair
 #include <cstdlib> // for rand() and passing string pair
-#include <cctype> // for tolower()
-#include <vector> // for storing names
+#include <cctype> // for tolower(
 
 #define FIRST_NAME_FILE_PATH "firstNames.csv"
 #define LAST_NAME_FILE_PATH "lastNames.csv"
@@ -53,10 +52,11 @@ static Command enumerate_command(std::string& userInput) {
 File I/O
 ----- */
 void import_names(
-    std::vector<std::string>& firstNames, 
-    std::vector<std::string>& lastNames
+    std::string (&firstNames)[FIRST_NAME_NAME_COUNT], 
+    std::string (&lastNames)[LAST_NAME_NAME_COUNT]
 ) {
     std::string line;
+    unsigned int index = 0;
     
     std::ifstream firstFile(FIRST_NAME_FILE_PATH);
     if(std::getline(firstFile, line)) {
@@ -64,18 +64,21 @@ void import_names(
         std::string name;
         
         while (std::getline(ss, name, ',')) {
-            firstNames.push_back(name);
+            firstNames[index] = name;
+            index++;
         }
     }
     firstFile.close();
     
+    index = 0;
     std::ifstream lastFile(LAST_NAME_FILE_PATH);
     if(std::getline(lastFile, line)) {
         std::stringstream ss(line);
         std::string name;
         
         while (std::getline(ss, name, ',')) {
-            lastNames.push_back(name);
+            lastNames[index] = name;
+            index++;
         }
     }
     lastFile.close();
@@ -87,8 +90,8 @@ Generate random first
 and last names of students
 ----- */
 void generate_random_name(
-    const std::vector<std::string>& firstNames,
-    const std::vector<std::string>& lastNames,
+    std::string (&firstNames)[FIRST_NAME_NAME_COUNT], 
+    std::string (&lastNames)[LAST_NAME_NAME_COUNT],
     std::string& refFirstName,
     std::string& refLastName
 ) {
@@ -97,11 +100,12 @@ void generate_random_name(
     both lists, and then sets the
     variables by reference
     ----- */
-    size_t indexNo1 = std::rand() % firstNames.size();
-    size_t indexNo2 = std::rand() % lastNames.size();
+    size_t indexNo1 = std::rand() % FIRST_NAME_NAME_COUNT;
+    size_t indexNo2 = std::rand() % LAST_NAME_NAME_COUNT;
     refFirstName = firstNames[indexNo1];
     refLastName = lastNames[indexNo2];
 }
+
 
 /* -----
 Initiate student class
@@ -141,7 +145,7 @@ private:
 public:
 
 	/* Constructor / Deconstructor */
-	Node(Student* student) { data = student; next = nullptr; }
+	Node(Student* student) { data = student; next = NULL; }
 	~Node() { delete data; }
 
 	/* Function returns private data (node* next) to point to the next node */
@@ -155,21 +159,57 @@ public:
 };
 
 /* -----
+Hashing processes
+----- */
+unsigned int get_linked_list_depth(
+    Node* headNode,
+) {
+    if (headNode->getNext() == NULL) return 1;
+    return 1 + get_linked_list_depth(headNode->getNext());
+}
+void add_to_linked_list(
+    Node* headNode,
+    Node* newNode
+) {
+    if (headNode->getNext() == NULL) headNode->setNext(newNode);
+    else add_to_linked_list(headNode->getNext());
+}
+bool hash_node(
+    unsigned int hashMod,
+    Node** hashTable,
+    Node* newNode
+) {
+    const unsigned int index = (newNode->getStudent()->studentID + std::round(newNode->getStudent()->GPA)) % hashMod;
+    if (hashTable != NULL) {
+        if (get_linked_list_depth(hashTable[index]) >= 3) return true;
+        else add_to_linked_list(hashTable[index], newNode);
+    }
+    else {
+        hashTable[index] = newNode;
+    }
+}
+
+
+/* -----
 User command processes
 ----- */
 
 
+/* -----
+Executive loop
+----- */
 int main() {
-    bool running = true;
-    std::string userInput;
-    Command userCommand;
+    // define hashing variables
+    unsigned int hashMod = 100;
+    Node* hashTable = new Node*[hashMod];
+    for (int i = 0; i < hashMod; i++) { hashMod[i] == NULL; }
 
     /* -----
     Import first and last names
     for random name generation
     ----- */
-    std::vector<std::string> firstNames;
-    std::vector<std::string> lastNames;
+    std::string firstNames[FIRST_NAME_NAME_COUNT];
+    std::string lastNames[LAST_NAME_NAME_COUNT];
     import_names(firstNames, lastNames);
 
     /* debug-funtime
@@ -179,6 +219,10 @@ int main() {
     std::cout << "Random name generated: " << rfn << " " << rln << std::endl;
     */
 
+    // initiate loop vars
+    bool running = true;
+    std::string userInput;
+    Command userCommand;
     while (running) 
     {
         /* ----- 
@@ -216,6 +260,7 @@ int main() {
                 std::cin >> studentGPA;
 
                 Student* newStudent = new Student(newFirstName, newLastName, studentID, studentGPA);
+                Node* newNode = new Node(newStudent);
                 break;
             }
             case BULK: {
@@ -230,6 +275,7 @@ int main() {
             case QUIT: {
                 running = false;
                 break;
+            }
             case UNKNOWN: {
                 break;
             }
@@ -238,6 +284,9 @@ int main() {
             }
         }
     }
+
+    // deallocate memory
+    delete[] hashTable;
 
     return 0;
 }
