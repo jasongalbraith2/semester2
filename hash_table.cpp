@@ -5,7 +5,8 @@
 #include <algorithm> // for to_lower function
 #include <utility> // for passing string pair
 #include <cstdlib> // for rand() and passing string pair
-#include <cctype> // for tolower(
+#include <cctype> // for tolower()
+#include <cmath> // for std::round
 
 #define FIRST_NAME_FILE_PATH "firstNames.csv"
 #define LAST_NAME_FILE_PATH "lastNames.csv"
@@ -129,6 +130,9 @@ public:
           studentID(userStudentID),
           GPA(userGPA)
     {}
+    
+    int getID() { return studentID; }
+    float getGPA() { return GPA; }
 };
 
 
@@ -162,7 +166,7 @@ public:
 Hashing processes
 ----- */
 unsigned int get_linked_list_depth(
-    Node* headNode,
+    Node* headNode
 ) {
     if (headNode->getNext() == NULL) return 1;
     return 1 + get_linked_list_depth(headNode->getNext());
@@ -172,20 +176,31 @@ void add_to_linked_list(
     Node* newNode
 ) {
     if (headNode->getNext() == NULL) headNode->setNext(newNode);
-    else add_to_linked_list(headNode->getNext());
+    else add_to_linked_list(headNode->getNext(), newNode);
 }
 bool hash_node(
     unsigned int hashMod,
     Node** hashTable,
     Node* newNode
 ) {
-    const unsigned int index = (newNode->getStudent()->studentID + std::round(newNode->getStudent()->GPA)) % hashMod;
+    const unsigned int index = (newNode->getStudent()->getID() + (unsigned int)(std::round(newNode->getStudent()->getGPA()))) % hashMod;
     if (hashTable != NULL) {
         if (get_linked_list_depth(hashTable[index]) >= 3) return true;
         else add_to_linked_list(hashTable[index], newNode);
     }
     else {
         hashTable[index] = newNode;
+    }
+    return false;
+}
+void print_table(
+    unsigned int hashMod,
+    Node** hashTable
+) {
+    for (int i = 0; i < hashMod; ++i) {
+        if (hashTable[i] != NULL) {
+            std::cout << "KEY: " << i << " | " << hashTable[i]->getStudent()->getID() << "\n"; 
+        }
     }
 }
 
@@ -201,8 +216,8 @@ Executive loop
 int main() {
     // define hashing variables
     unsigned int hashMod = 100;
-    Node* hashTable = new Node*[hashMod];
-    for (int i = 0; i < hashMod; i++) { hashMod[i] == NULL; }
+    Node** hashTable = new Node*[hashMod];
+    for (int i = 0; i < hashMod; i++) { hashTable[i] == NULL; }
 
     /* -----
     Import first and last names
@@ -267,6 +282,7 @@ int main() {
                 break;
             }
             case PRINT: {
+                print_table(hashMod, hashTable);
                 break;
             }
             case DELETE: {
