@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream> // for input and output
 #include <fstream> // for file I/O
-#include <sstream> // for file I/o
+#include <sstream> // for file I/O
 #include <algorithm> // for to_lower function
 #include <utility> // for passing string pair
 #include <cstdlib> // for rand() and passing string pair
@@ -197,9 +197,20 @@ void print_table(
     unsigned int hashMod,
     Node** hashTable
 ) {
+    Node* currentNode = NULL;
+    
     for (int i = 0; i < hashMod; ++i) {
-        if (hashTable[i] != NULL) {
-            std::cout << "KEY: " << i << " | " << hashTable[i]->getStudent()->getID() << "\n"; 
+        if (hashTable[i] != NULL && hashTable[i]->getStudent() != NULL) {
+            std::cout << "KEY: " << i;
+            
+            // iterate through the linked list
+            // for each node and print data
+            currentNode = hashTable[i];
+            while (currentNode != NULL) {
+                std::cout << " | " << hashTable[i]->getStudent()->getID();
+                currentNode = currentNode->getNext();
+            }
+            std::cout << "\n";
         }
     }
 }
