@@ -184,9 +184,9 @@ bool hash_node(
     Node* newNode
 ) {
     const unsigned int index = (newNode->getStudent()->getID() + (unsigned int)(std::round(newNode->getStudent()->getGPA()))) % hashMod;
-    if (hashTable != NULL) {
-        if (get_linked_list_depth(hashTable[index]) >= 3) return true;
-        else add_to_linked_list(hashTable[index], newNode);
+    if (hashTable[index] != NULL) {
+        add_to_linked_list(hashTable[index], newNode);
+        if (get_linked_list_depth(hashTable[index]) > 3) return true;
     }
     else {
         hashTable[index] = newNode;
@@ -203,6 +203,39 @@ void print_table(
         }
     }
 }
+void rehash_nodes(
+    unsigned int &hashMod,
+    Node** hashTable
+) {
+    /* -----
+    Reset hash function,
+    create new table,
+    allocate memory,
+    and assign null to table
+    ----- */
+    hashMod *= 2;
+    Node** newHashTable = new Node*[hashMod];
+    for (int i = 0; i < hashMod; i++) { newHashTable[i] = NULL; }
+
+    /* -----
+    Iterate through old table
+    and rehash all nodes
+    into the new table
+    ----- */
+    for (int i = 0; i < hashMod / 2; ++i) {
+        if (hashTable[i] != NULL) {
+            Node* currentNode = hashTable[i];
+            // step to next node in the linked list and rehash each node
+            while (currentNode != NULL) {
+                currentNode->setNext(NULL);
+                hash_node(hashMod, newHashTable, currentNode);
+                currentNode = currentNode->getNext();
+            }
+        }
+    }
+    delete[] hashTable;
+    hashTable = newHashTable;
+}
 
 
 /* -----
@@ -217,7 +250,7 @@ int main() {
     // define hashing variables
     unsigned int hashMod = 100;
     Node** hashTable = new Node*[hashMod];
-    for (int i = 0; i < hashMod; i++) { hashTable[i] == NULL; }
+    for (int i = 0; i < hashMod; i++) { hashTable[i] = NULL; }
 
     /* -----
     Import first and last names
@@ -238,6 +271,9 @@ int main() {
     bool running = true;
     std::string userInput;
     Command userCommand;
+
+    // add command variables
+    bool result = false;
     while (running) 
     {
         /* ----- 
@@ -276,6 +312,15 @@ int main() {
 
                 Student* newStudent = new Student(newFirstName, newLastName, studentID, studentGPA);
                 Node* newNode = new Node(newStudent);
+                result = hash_node(hashMod, hashTable, newNode);
+
+                // continue to rehash until function is large enough to 
+                // support all table without 4+ nodes in a single index
+                while (result) {
+                    rehash_nodes(hashMod, hashTable);
+                    result = hash_node(hashMod, hashTable, newNode);
+                }
+
                 break;
             }
             case BULK: {
