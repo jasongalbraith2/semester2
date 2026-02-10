@@ -7,6 +7,7 @@
 #include <cstdlib> // for rand() and passing string pair
 #include <cctype> // for tolower()
 #include <cmath> // for std::round
+#include <ctime> // for std::time
 
 #define FIRST_NAME_FILE_PATH "firstNames.csv"
 #define LAST_NAME_FILE_PATH "lastNames.csv"
@@ -87,28 +88,6 @@ void import_names(
 
 
 /* -----
-Generate random first
-and last names of students
------ */
-void generate_random_name(
-    std::string (&firstNames)[FIRST_NAME_NAME_COUNT], 
-    std::string (&lastNames)[LAST_NAME_NAME_COUNT],
-    std::string& refFirstName,
-    std::string& refLastName
-) {
-    /* -----
-    Generates random indexes in
-    both lists, and then sets the
-    variables by reference
-    ----- */
-    size_t indexNo1 = std::rand() % FIRST_NAME_NAME_COUNT;
-    size_t indexNo2 = std::rand() % LAST_NAME_NAME_COUNT;
-    refFirstName = firstNames[indexNo1];
-    refLastName = lastNames[indexNo2];
-}
-
-
-/* -----
 Initiate student class
 and define functionality
 ----- */
@@ -133,7 +112,37 @@ public:
     
     int getID() { return studentID; }
     float getGPA() { return GPA; }
+    std::string getFName() { return firstName; }
 };
+
+
+/* -----
+Generate random first
+and last names of students
+----- */
+Student* generate_random_student(
+    std::string (&firstNames)[FIRST_NAME_NAME_COUNT], 
+    std::string (&lastNames)[LAST_NAME_NAME_COUNT]
+) {
+    /* -----
+    Generates random indexes in
+    both lists, and then sets the
+    variables by reference
+    ----- */
+
+    size_t indexNo1 = std::rand() % FIRST_NAME_NAME_COUNT;
+    size_t indexNo2 = std::rand() % LAST_NAME_NAME_COUNT;
+    unsigned int randomID = std::rand() % 1000000 + 1;
+    float randomGPA = (std::rand() % 3000 + 1001) / 1000.0f;
+
+    Student* newStudent = new Student(
+        firstNames[indexNo1], 
+        lastNames[indexNo2],
+        randomID,
+        randomGPA
+    );
+    return newStudent; 
+}
 
 
 /* -----
@@ -165,6 +174,12 @@ public:
 /* -----
 Hashing processes
 ----- */
+static inline unsigned int create_hash(
+    Node* newNode,
+    unsigned int hashMod
+) {
+    return (newNode->getStudent()->getID() * 2654435761u) % hashMod;
+}
 unsigned int get_linked_list_depth(
     Node* headNode
 ) {
@@ -209,8 +224,7 @@ bool hash_node(
     which is a simplistic implementation of hashing 
     protocol.
     ----- */
-    const unsigned int index =
-        (newNode->getStudent()->getID() * 2654435761u) % hashMod;
+    const unsigned int index = create_hash(newNode, hashMod);
 
     /* -----
     Attempt to add hashed node
@@ -290,6 +304,9 @@ void print_table(
 Executive loop
 ----- */
 int main() {
+    // initiate random
+    std::srand(std::time(nullptr));
+
     // define hashing variables
     unsigned int hashMod = 100;
     Node** hashTable = new Node*[hashMod];
@@ -303,13 +320,6 @@ int main() {
     std::string lastNames[LAST_NAME_NAME_COUNT];
     import_names(firstNames, lastNames);
 
-    /* debug-funtime
-    std::string rfn;
-    std::string rln;
-    generate_random_name(firstNames, lastNames, rfn, rln);
-    std::cout << "Random name generated: " << rfn << " " << rln << std::endl;
-    */
-
     // initiate loop vars
     bool running = true;
     std::string userInput;
@@ -318,6 +328,14 @@ int main() {
     // add command variables
     bool result = false;
     unsigned int rehashCount = 0;
+
+    // bulk command variables
+    unsigned int bulkCount = 0;
+
+    // delete variables
+    Node* currentNode;
+    Node* priorNode;
+    unsigned int toDelete = 0;
     while (running) 
     {
         /* ----- 
@@ -373,6 +391,27 @@ int main() {
                 break;
             }
             case BULK: {
+                std::cout << "[] Enter Amount of Names > ";
+                std::cin >> bulkCount;
+                
+                for (unsigned int i = 0; i < bulkCount; ++i) {
+                    Student* newStudent = generate_random_student(firstNames, lastNames);
+                    Node* newNode = new Node(newStudent);
+                    result = hash_node(hashMod, hashTable, newNode);
+
+                    // continue to rehash until function is large enough to 
+                    // support all table without 4+ nodes in a single index
+                    while (result) {
+                        rehashCount++;
+                        rehash_nodes(hashMod, hashTable);
+                        result = exceeds_max_depth(hashTable, hashMod);
+
+                        if (rehashCount > 16) {
+                            std::cout << "Too many rehashes, exiting program.\n";
+                            return 1;
+                        }
+                    }
+                }
                 break;
             }
             case PRINT: {
@@ -380,6 +419,24 @@ int main() {
                 break;
             }
             case DELETE: {
+                std::cout << "[] Enter ID to Delete > ";
+                std::cin >> toDelete;
+                for (unsigned int i = 0; i < hashMod; ++i) {
+                    if (hashTable[i] != NULL) {
+                        currentNode = hashTable[i];
+                        priorNode = NULL;
+                        while (currentNode != NULL) {
+                            if (currentNode->getStudent()->getID() == toDelete) {
+                                /* FIX */
+
+                                priorNode->setNext(currentNode->getNext());
+                                break;
+                            }
+                            priorNode = currentNode;
+                            currentNode = currentNode->getNext();
+                        }
+                    }
+                }
                 break;
             }
             case QUIT: {
