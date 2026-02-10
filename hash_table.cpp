@@ -168,22 +168,54 @@ Hashing processes
 unsigned int get_linked_list_depth(
     Node* headNode
 ) {
-    if (headNode->getNext() == NULL) return 1;
-    return 1 + get_linked_list_depth(headNode->getNext());
+    unsigned int depth = 0;
+    Node* currentNode = headNode;
+    while (currentNode != NULL) {
+        depth++;
+        currentNode = currentNode->getNext();
+    }
+    return depth;
 }
 void add_to_linked_list(
     Node* headNode,
     Node* newNode
 ) {
-    if (headNode->getNext() == NULL) headNode->setNext(newNode);
-    else add_to_linked_list(headNode->getNext(), newNode);
+    if (headNode != NULL) {
+        Node* currentNode = headNode;
+        while (currentNode->getNext() != NULL) {
+            currentNode = currentNode->getNext();
+        }
+        currentNode->setNext(newNode);
+    }
+}
+bool exceeds_max_depth(
+    Node** hashTable,
+    unsigned int hashMod
+) {
+    for (unsigned int i = 0; i < hashMod; ++i) {
+        if (hashTable[i] != NULL && get_linked_list_depth(hashTable[i]) > 3) return true;
+    }
+    return false;
 }
 bool hash_node(
     unsigned int hashMod,
     Node** hashTable,
     Node* newNode
 ) {
-    const unsigned int index = (newNode->getStudent()->getID() + (unsigned int)(std::round(newNode->getStudent()->getGPA()))) % hashMod;
+
+    /* -----
+    Hashing mathematics occurs here
+    Here we implement Knuth's multiplicative method,
+    which is a simplistic implementation of hashing 
+    protocol.
+    ----- */
+    const unsigned int index =
+        (newNode->getStudent()->getID() * 2654435761u) % hashMod;
+
+    /* -----
+    Attempt to add hashed node
+    into key index into hash table
+    ----- */
     if (hashTable[index] != NULL) {
         add_to_linked_list(hashTable[index], newNode);
         if (get_linked_list_depth(hashTable[index]) > 3) return true;
@@ -193,6 +225,45 @@ bool hash_node(
     }
     return false;
 }
+void rehash_nodes(
+    unsigned int &hashMod,
+    Node** &hashTable
+) {
+    /* -----
+    Reset hash function,
+    create new table,
+    allocate memory,
+    and assign null to table
+    ----- */
+    hashMod *= 2;
+    Node** newHashTable = new Node*[hashMod];
+    for (unsigned int i = 0; i < hashMod; ++i) { newHashTable[i] = NULL; }
+
+    /* -----
+    Iterate through old table
+    and rehash all nodes
+    into the new table
+    ----- */
+    for (unsigned int i = 0; i < (hashMod / 2); ++i) {
+        if (hashTable[i] != NULL) {
+            Node* currentNode = hashTable[i];
+            // step to next node in the linked list and rehash each node
+            while (currentNode != NULL) {
+                Node* next = currentNode->getNext();
+                currentNode->setNext(NULL);
+                hash_node(hashMod, newHashTable, currentNode);
+                currentNode = next;
+            }
+        }
+    }
+    delete[] hashTable;
+    hashTable = newHashTable;
+}
+
+
+/* -----
+User command processes
+----- */
 void print_table(
     unsigned int hashMod,
     Node** hashTable
@@ -207,52 +278,13 @@ void print_table(
             // for each node and print data
             currentNode = hashTable[i];
             while (currentNode != NULL) {
-                std::cout << " | " << hashTable[i]->getStudent()->getID();
+                std::cout << " | " << currentNode->getStudent()->getID();
                 currentNode = currentNode->getNext();
             }
             std::cout << "\n";
         }
     }
 }
-void rehash_nodes(
-    unsigned int &hashMod,
-    Node** hashTable
-) {
-    /* -----
-    Reset hash function,
-    create new table,
-    allocate memory,
-    and assign null to table
-    ----- */
-    hashMod *= 2;
-    Node** newHashTable = new Node*[hashMod];
-    for (int i = 0; i < hashMod; i++) { newHashTable[i] = NULL; }
-
-    /* -----
-    Iterate through old table
-    and rehash all nodes
-    into the new table
-    ----- */
-    for (int i = 0; i < hashMod / 2; ++i) {
-        if (hashTable[i] != NULL) {
-            Node* currentNode = hashTable[i];
-            // step to next node in the linked list and rehash each node
-            while (currentNode != NULL) {
-                currentNode->setNext(NULL);
-                hash_node(hashMod, newHashTable, currentNode);
-                currentNode = currentNode->getNext();
-            }
-        }
-    }
-    delete[] hashTable;
-    hashTable = newHashTable;
-}
-
-
-/* -----
-User command processes
------ */
-
 
 /* -----
 Executive loop
@@ -285,6 +317,7 @@ int main() {
 
     // add command variables
     bool result = false;
+    unsigned int rehashCount = 0;
     while (running) 
     {
         /* ----- 
@@ -328,10 +361,15 @@ int main() {
                 // continue to rehash until function is large enough to 
                 // support all table without 4+ nodes in a single index
                 while (result) {
+                    rehashCount++;
                     rehash_nodes(hashMod, hashTable);
-                    result = hash_node(hashMod, hashTable, newNode);
-                }
+                    result = exceeds_max_depth(hashTable, hashMod);
 
+                    if (rehashCount > 16) {
+                        std::cout << "Too many rehashes, exiting program.\n";
+                        return 1;
+                    }
+                }
                 break;
             }
             case BULK: {
@@ -358,6 +396,16 @@ int main() {
     }
 
     // deallocate memory
+    for (unsigned int i = 0; i < hashMod; ++i) {
+        if (hashTable[i] != NULL) {
+            Node* currentNode = hashTable[i];
+            while (currentNode != NULL) {
+                Node* next = currentNode->getNext();
+                delete currentNode;
+                currentNode = next;
+            }
+        }
+    }
     delete[] hashTable;
 
     return 0;
