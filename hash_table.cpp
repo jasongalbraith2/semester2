@@ -65,7 +65,7 @@ void import_names(
         std::stringstream ss(line);
         std::string name;
         
-        while (std::getline(ss, name, ',')) {
+        while (std::getline(ss, name, ',') && index < FIRST_NAME_NAME_COUNT) {
             firstNames[index] = name;
             index++;
         }
@@ -78,7 +78,7 @@ void import_names(
         std::stringstream ss(line);
         std::string name;
         
-        while (std::getline(ss, name, ',')) {
+        while (std::getline(ss, name, ',') && index < LAST_NAME_NAME_COUNT) {
             lastNames[index] = name;
             index++;
         }
@@ -132,7 +132,7 @@ Student* generate_random_student(
 
     size_t indexNo1 = std::rand() % FIRST_NAME_NAME_COUNT;
     size_t indexNo2 = std::rand() % LAST_NAME_NAME_COUNT;
-    unsigned int randomID = std::rand() % 1000000 + 1;
+    unsigned int randomID = std::rand() % 900000 + 100000;
     float randomGPA = (std::rand() % 3000 + 1001) / 1000.0f;
 
     Student* newStudent = new Student(
@@ -428,15 +428,21 @@ int main() {
                         while (currentNode != NULL) {
                             if (currentNode->getStudent()->getID() == toDelete) {
                                 /* FIX */
-
-                                priorNode->setNext(currentNode->getNext());
-                                break;
+                                if (priorNode == NULL) {
+                                    hashTable[i] = currentNode->getNext();
+                                } else {
+                                    priorNode->setNext(currentNode->getNext());
+                                }
+                                delete currentNode;
+                                goto complete_deletion;
                             }
                             priorNode = currentNode;
                             currentNode = currentNode->getNext();
                         }
                     }
                 }
+                std::cout << "ID not found.\n";
+                complete_deletion:
                 break;
             }
             case QUIT: {
