@@ -113,6 +113,7 @@ public:
     int getID() { return studentID; }
     float getGPA() { return GPA; }
     std::string getFName() { return firstName; }
+	std::string getFullName() { return firstName + " " + lastName; }
 };
 
 
@@ -292,7 +293,7 @@ void print_table(
             // for each node and print data
             currentNode = hashTable[i];
             while (currentNode != NULL) {
-                std::cout << " | " << currentNode->getStudent()->getID();
+                std::cout << " | " << currentNode->getStudent()->getFullName() << " " << currentNode->getStudent()->getID() << " " << currentNode->getStudent()->getGPA();
                 currentNode = currentNode->getNext();
             }
             std::cout << "\n";
