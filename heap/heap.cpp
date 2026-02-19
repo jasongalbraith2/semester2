@@ -116,8 +116,31 @@ public:
 void import_method_1(
     unsigned int*& numbers
 ) {
+    std::cout << "[] Importing numbers (Method 1): Enter numbers until you type quit\nEnds import process.\n";
+
     // Implementation for import method 1
-    for (unsigned int i = 0; i < MAX_NUMBERS; ++i) {}
+    std::string input;
+
+    for (unsigned int i = 0; i < MAX_NUMBERS; ++i) {
+        std::cout << "[] Enter number > ";
+        std::cin >> input;
+
+        // If the input is a number
+        if (!input.empty() && std::all_of(input.begin(), input.end(), ::isdigit)) {
+            // If not, convert the input to an unsigned integer
+            // and store it in the array
+            numbers[i] = std::stoul(input);
+        }
+
+        // If the string is "quit", quit the import cycle
+        else {
+            to_lower(input);
+            if (input == "quit") return;
+
+            // If not
+            else --i; 
+        }
+    }
 }
 
 void print_heap(Heap& heap) {
@@ -130,6 +153,9 @@ int main() {
 
     // Allocate memory
     unsigned int* importedNumbers = new unsigned int [MAX_NUMBERS];
+    for (unsigned int i = 0; i < MAX_NUMBERS; ++i) {
+        importedNumbers[i] = 0;
+    }
     Heap* heap = new Heap();
 
     // Main loop
@@ -138,14 +164,25 @@ int main() {
     unsigned int toInsert;
     Method method;
     do {
-        std::cout << "[] Enter Command (Import, Insert, Delete) > ";
+        std::cout << "[] Enter Command (Import, Insert, Print, Delete, Quit) > ";
         std::cin >> command;
         method = process_command(command);
 
         switch (method) {
             case IMPORT:
                 // Handle import command
-                import_method_1(importedNumbers);
+                std::cout << "[] Enter Import Method (1 or 2) > ";
+                std::cin >> command;
+                if (command == "1") import_method_1(importedNumbers);
+                if (command == "2") break; // TODO: Implement method 2
+                else break;
+
+                // Insert imported numbers into the heap
+                for (unsigned int i = 0; i < MAX_NUMBERS; ++i) {
+                    if (importedNumbers[i] != 0) {
+                        heap->insert(importedNumbers[i]);
+                    }
+                }
                 break;
             case INSERT:
                 // Handle insert command
@@ -155,13 +192,14 @@ int main() {
                 break;
             case PRINT:
                 // Handle print command
-                heap->represent_as_arr();
+                heap->represent_as_arr(); // for debugging
                 break;
             case DELETE:
                 // Handle delete command
                 break;
             case UNKNOWN:
-                break;
+                return 1;
+                // break;
             default:
                 break;
         }
