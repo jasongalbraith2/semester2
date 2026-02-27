@@ -1,4 +1,5 @@
 #include <iostream> // included for input and output
+#include <limits> // included for std::numeric_limits
 #include <iomanip> // included for std::setw
 #include <algorithm> // included for std::transform and std::swap
 #include <string> // included to utilize strings
@@ -13,6 +14,8 @@ enum Method {
     INSERT,
     PRINT,
     DELETE,
+    DELETE_ALL,
+    QUIT,
     UNKNOWN
 };
 
@@ -34,7 +37,9 @@ Method process_command(std::string command) {
     if (command == "import") { return IMPORT; }
     if (command == "insert") { return INSERT; }
     if (command == "print")  { return PRINT; }
+    if (command == "quit")   { return QUIT; }
     if (command == "delete") { return DELETE; }
+    if (command == "deleteall") { return DELETE_ALL; }
     return UNKNOWN;
 }
 
@@ -62,6 +67,25 @@ class Heap {
         
         // Return the maximum depth of either side (plus 1)
         return 1 + (leftDepth > rightDepth ? leftDepth : rightDepth);
+    }
+
+    void sub_print(
+        unsigned int index,
+        unsigned int depth
+    ) {
+        // Implementation for representing the heap
+        //std::cout << "[] Max Heap: ";
+        if (index >= heapSize) return;
+
+        // Print the right side (represented as upper)
+        sub_print(right(index), depth + 1);
+
+        // Indent based on depth and print
+        // the current node
+        std::cout << std::setw(depth * 4) << heapArray[index] << "\n";
+        
+        // Print left side (represented as lower)
+        sub_print(left(index), depth + 1);
     }
     
     public:
@@ -131,7 +155,7 @@ class Heap {
                     currentIndex = rightIndex;
                 }
                 
-                // If the new head is the largest, quit
+                // If the new head is the largest quit
                 else {
                     break;
                 }
@@ -149,17 +173,8 @@ class Heap {
     }
     
     void represent() {
-        // Implementation for representing the heap
-        std::cout << "[] Max Heap: ";
-        
-        // Print the right side (represented as upper)
-        unsigned int rightDepth = get_depth(right(0));
-        
-        // Print middle (first/parent node)
-        std::cout << heapArray[0] << "\n";
-        
-        // Print left side (represented as lower)
-        unsigned int leftDepth = get_depth(left(0));
+        std::cout << "[] Max Heap > \n";
+        sub_print(0, 0);
     }
 
     unsigned int get_size() {
@@ -168,21 +183,19 @@ class Heap {
 };
 
 void process_number_string(
-    const std::string& numbers,
+    std::string numbers,
     Heap* heap
 ) {
-    // Implementation for reading a file with numbers and insert
-    // them into the heap
-
     // Create string stream to loop through the numbers
     // Process each number and insert into the heap
+    unsigned int remaining = MAX_NUMBERS - heap->get_size();
     unsigned int count = 0;
     unsigned int num;
+    std::string token;
     std::stringstream ss(numbers);
-    std::string number;
 
-    while (count < MAX_NUMBERS - heap->get_size() && ss >> number) {
-        num = std::stoul(number);
+    while (count < remaining && (ss >> token)) {
+        num = std::stoul(token);
         if (in_range(num)) {
             heap->insert(num);
             ++count;
@@ -227,18 +240,28 @@ int main() {
             case INSERT: {
                 // Handle insert command
                 std::cout << "[] Enter numbers to insert separated by spaces > ";
-                std::cin >> command;
+                
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear buffer
+                std::getline(std::cin, command); // read line
                 process_number_string(command, heap);
                 break;
             }
             case PRINT: {
                 // Handle print command
                 heap->represent_as_arr(); // for debugging
+                heap->represent();
                 break;
             }
             case DELETE: {
                 // Handle delete command
                 heap->delete_head();
+                break;
+            }
+            case DELETE_ALL: {
+                // Handle delete all command
+                while (heap->get_size() > 0) {
+                    heap->delete_head();
+                }
                 break;
             }
             case UNKNOWN: {
