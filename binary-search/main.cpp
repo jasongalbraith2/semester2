@@ -1,17 +1,18 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <cctype>
-
-// aditya c. said ai was A-OK for debugging!
-// sophia wang said it was ok if i cheated on my entire thing
-// p.s. sophia stop drawing over my incredible artistic masterpieces
+#include <fstream>
 
 /* ----- Create Utility Functions ----- */
 bool is_number(const std::string& n);
+std::string import_from_file(const std::string& fp);
+
 
 /* ----- Create Command Enum ----- */
 enum Command {
     PRINT,
+    IMPORT,
     ADD,
     DELETE,
     QUIT,
@@ -72,13 +73,20 @@ int main() {
     Command result;
     bool running = true;
     do {
-        std::cout << "[] Enter Command (add, print, delete, quit) > ";
+        std::cout << "[] Enter Command (add, import, print, delete, quit) > ";
         std::getline(std::cin, command);
         result = process_command(command);
 
         switch (result) {
             case PRINT: {
                 tree.print();
+                break;
+            }
+            case IMPORT: {
+                std::cout << "[import] Enter filename to import from > ";
+                std::getline(std::cin, command);
+                std::string toAdd = import_from_file(command);
+                tree.add(toAdd);
                 break;
             }
             case ADD: {
@@ -110,10 +118,25 @@ bool is_number(const std::string& n) {
     for (int i = 0; i < n.length(); ++i) if (!std::isdigit(n[i])) return false;
     return true;
 }
+std::string import_from_file(const std::string& fp) {
+    std::ifstream f(fp);
+    std::string line;
+
+    if (std::getline(f, line) && f.is_open()) {
+        std::cout << line << "\n";
+        f.close();
+
+        return line;
+    }
+
+    f.close();
+    return "";
+}
 
 /* ----- Define Command Functions ----- */
 Command process_command(const std::string& input) {
     if (input == "print") return PRINT;
+    if (input == "import") return IMPORT;
     if (input == "add") return ADD;
     if (input == "delete") return DELETE;
     if (input == "quit") return QUIT;
@@ -169,9 +192,15 @@ void Tree::add(const unsigned short int val) {
     add_helper(val, root); 
 }
 void Tree::add(const std::string& val) {
-    if (!is_number(val)) return; // and out of range
-    const unsigned short int n = static_cast<unsigned short int>(std::stoul(val));
-    add(n);
+    std::stringstream ss(val);
+    std::string token;
+
+    while (getline(ss, token, ' ')) {
+        if (token.empty()) continue;
+        if (!is_number(token)) continue; // and out of range
+        const unsigned short int n = static_cast<unsigned short int>(std::stoul(token));
+        add(n);
+    }
 }
 void Tree::add_helper(const unsigned short int val, Node* cur) {
     Node* n = new Node();
