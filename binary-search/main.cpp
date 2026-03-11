@@ -2,6 +2,10 @@
 #include <string>
 #include <cctype>
 
+// aditya c. said ai was A-OK for debugging!
+// sophia wang said it was ok if i cheated on my entire thing
+// p.s. sophia stop drawing over my incredible artistic masterpieces
+
 /* ----- Create Utility Functions ----- */
 bool is_number(const std::string& n);
 
