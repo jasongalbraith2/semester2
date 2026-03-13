@@ -14,6 +14,7 @@ enum Command {
     PRINT,
     IMPORT,
     ADD,
+    SEARCH,
     DELETE,
     QUIT,
     UNKNOWN
@@ -62,6 +63,7 @@ class Tree {
     void add(const unsigned short int val);
     void add(const std::string& val);
     bool search(const unsigned short int tval);
+    bool search(const std::string& tval);
     void del(const std::string& val);
 };
 
@@ -73,7 +75,7 @@ int main() {
     Command result;
     bool running = true;
     do {
-        std::cout << "[] Enter Command (add, import, print, delete, quit) > ";
+        std::cout << "[] Enter Command (add, search, import, print, delete, quit) > ";
         std::getline(std::cin, command);
         result = process_command(command);
 
@@ -93,6 +95,13 @@ int main() {
                 std::cout << "[add] Enter number to add > ";
                 std::getline(std::cin, command);
                 tree.add(command);
+                break;
+            }
+            case SEARCH: {
+                std::cout << "[srch] Enter number to search > ";
+                std::getline(std::cin, command);
+                if (tree.search(command)) std::cout << "[srch] Exists.\n";
+                else std::cout << "[srch] Does not exist.\n";
                 break;
             }
             case DELETE: {
@@ -138,6 +147,7 @@ Command process_command(const std::string& input) {
     if (input == "print") return PRINT;
     if (input == "import") return IMPORT;
     if (input == "add") return ADD;
+    if (input == "search") return SEARCH;
     if (input == "delete") return DELETE;
     if (input == "quit") return QUIT;
     return UNKNOWN; // TODO: implement unknown
@@ -228,6 +238,11 @@ void Tree::add_helper(const unsigned short int val, Node* cur) {
     return;
 }
 bool Tree::search(const unsigned short int tval) { return search_helper(tval, root); }
+bool Tree::search(const std::string& tval) {
+    if (!is_number(tval)) return false;
+    const unsigned short int n = static_cast<unsigned short int>(std::stoul(tval));
+    return search(n);
+}
 bool Tree::search_helper(const unsigned short int tval, Node* cur) {
     // If the tree has nothing in it its not there
     if (cur == nullptr) return false;
