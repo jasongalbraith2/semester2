@@ -231,6 +231,26 @@ class BinaryTree {
         delete head;
     }
 
+    std::string infix_helper(Node* n) {
+        if (!n) return "";
+
+        // If the left node does not exist then
+        // immediately return (end of iter)
+        if (!n->get_left() && n->get_right()) return std::string(1, n->get_token_value());
+
+        // Otherwise mash together the children 
+        return infix_helper(n->get_left()) + " " + std::string(1, n->get_token_value()) + " " + infix_helper(n->get_right());
+    }
+    std::string prefix_helper(Node* n) {
+        if (!n) return "";
+        // return the current op combined with the left and right tokens
+        return std::string(1, n->get_token_value()) + " " + prefix_helper(n->get_left()) + prefix_helper(n->get_right());
+    }
+    std::string postfix_helper(Node* n) {
+        if (!n) return "";
+        return postfix_helper(n->get_left()) + postfix_helper(n->get_right()) + " " + n->get_token_value();
+    }
+
     public:
     BinaryTree() {
         root = nullptr;
@@ -248,9 +268,15 @@ class BinaryTree {
         sub_represent(root, 0);
     }
 
-    void represent_infix();
-    void represent_prefix();
-    void represent_postfix();
+    void represent_infix() {
+        std::cout << "[infix] " << infix_helper(root) << "\n";
+    }
+    void represent_prefix() {
+        std::cout << "[prefix] " << prefix_helper(root) << "\n";
+    }
+    void represent_postfix() {
+        std::cout << "[postfix] " << postfix_helper(root) << "\n";
+    }
 
     void clear() {
         sub_clear(root);
@@ -414,7 +440,7 @@ int main() {
             /* ----- Allow user input for notation outputs ----- */
             bool thisExpression;
             do {
-                std::cout << "[] Enter what notation you'd like your tree to print (infix, prefix, postfix) or \"next\" to move on.\n";
+                std::cout << "[] Enter what notation you'd like your tree to print (infix, prefix, postfix) or \"next\" to move on. > ";
                 std::getline(std::cin, command);
 
                 thisExpression = (command != "next");
