@@ -15,9 +15,6 @@ TO RUN: g++ *.cpp -o rbt
 */
 #include <iostream>
 #include <string>
-#include <sstream>
-#include <cctype>
-#include <fstream>
 
 #include "node.hpp"
 #include "tree.hpp"
@@ -42,22 +39,22 @@ int main() {
             case IMPORT: {
                 std::cout << "[import] Enter filename to import from > ";
                 std::getline(std::cin, command);
-                std::string toAdd = import_from_file(command);
+                command = import_from_file(command);
                 
                 // use insert method
-                TreeOperation::insert_str(&tree, toAdd);
+                RBTO::insert_str(&tree, command);
                 break;
             }
             case ADD: {
                 std::cout << "[add] Enter number to add > ";
                 std::getline(std::cin, command);
-                TreeOperation::insert_str(&tree, command);
+                RBTO::insert_str(&tree, command);
                 break;
             }
             case SEARCH: {
                 std::cout << "[srch] Enter number to search > ";
                 std::getline(std::cin, command);
-                if (TreeOperation::search(&tree, command)) std::cout << "[srch] Exists.\n";
+                if (RBTO::search(&tree, command)) std::cout << "[srch] Exists.\n";
                 else std::cout << "[srch] Does not exist.\n";
                 break;
             }

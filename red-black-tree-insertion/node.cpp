@@ -15,7 +15,7 @@ void Node::set_value(const unsigned short int v) { val = v; }
 void Node::set_c1(Node* c) { child1 = c; }
 void Node::set_c2(Node* c) { child2 = c; }
 void Node::set_pa(Node* c) { parent = c; }
-void Node::set_color(bool c) { color = c; }
+void Node::set_color(const bool c) { color = c; }
 const unsigned short int Node::get_value() { return val; }
 Node* Node::get_c1() { return child1; }
 Node* Node::get_c2() { return child2; }

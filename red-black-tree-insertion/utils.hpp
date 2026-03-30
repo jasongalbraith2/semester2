@@ -8,8 +8,6 @@
 /* ----- Create Utility Functions ----- */
 bool is_number(const std::string& n);
 std::string import_from_file(const std::string& fp);
-inline void printRed(const std::string& n);
-inline void printBlack(const std::string& n);
 void printNode(Node* n);
 
 /* ----- Create Command Enum ----- */

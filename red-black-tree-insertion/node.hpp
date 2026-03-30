@@ -19,7 +19,7 @@ class Node {
     void set_c1(Node* c); // Set the first child node
     void set_c2(Node* c); // Set the second child node
     void set_pa(Node* c);
-    void set_color(bool c);
+    void set_color(const bool c);
     
     // Getter functions
     const unsigned short int get_value();

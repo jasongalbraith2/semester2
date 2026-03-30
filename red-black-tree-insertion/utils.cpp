@@ -25,17 +25,18 @@ std::string import_from_file(const std::string& fp) {
     f.close();
     return "";
 }
-inline void printRed(const std::string& n) {
-    std::cout << "\x1b[1;31m" << n << "\x1b[37m";
+static inline void printRed(const std::string& n) {
+    std::cout << "\x1b[1;31m" << n << "\x1b[37m\n";
 }
-inline void printBlack(const std::string& n) {
-    std::cout << "\x1b[1;34m" << n << "\x1b[37m";
+static inline void printBlack(const std::string& n) {
+    std::cout << "\x1b[1;34m" << n << "\x1b[37m\n";
 }
 void printNode(Node* n) {
     if (!n) return;
     std::string v = std::to_string(n->get_value());
+    std::cout << "attempting to print node with value " << v << " and color " << (n->get_color() ? "red" : "black") << "\n";
     (n->get_color()) ? printRed(v) : printBlack(v);
-    std::cout << "\n";
+    //std::cout << "\n";
 }
 
 /* ----- Define Command Functions ----- */
