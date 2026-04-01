@@ -30,22 +30,31 @@ Tree::Tree() { root = nullptr; }
 Tree::~Tree() { TreeOperation::clear(this); }
 void Tree::set_root(Node* r) { root = r; }
 Node* Tree::get_root() { return root; }
-void Tree::print() { print_helper(0, root); }
+void Tree::print() { 
+    if (!root) {
+        std::cout << "[tree] Empty tree.\n";
+        return;
+    }
+
+    print_helper(0, root); 
+}
 
 
 /* ----- Define Tree Operation Functions ----- */
 void TreeOperation::insert(Tree* tree, const unsigned short int nodeVal) {
     // cases sourced from: https://www.geeksforgeeks.org/dsa/insertion-in-red-black-tree/
     
+    // Check to see if child will insert to root
+    if (tree->get_root() == nullptr) {
+        Node* nn = new Node();
+        nn->set_value(nodeVal);
+        tree->set_root(nn);
+        return;
+    }
+
     // Child is nn
     Node* nn = insert_helper(nodeVal, tree->get_root());
     if (!nn) return;
-    
-    // Check if the child is the root
-    if (nn == tree->get_root()) {
-        nn->set_color(false);
-        return;
-    }
     
     // Check if the parent is root
     Node* parent = nn->get_pa();
@@ -129,7 +138,6 @@ void TreeOperation::clear(Tree* tree) {
     clear_helper(root);
     
     // If the root exists, set the root to nullptr
-    delete root;
     tree->set_root(nullptr);
 }
 
@@ -230,6 +238,7 @@ void print_helper(const unsigned int depth, Node* n) {
     // the current node value
     std::cout << "[tree] " << std::string(depth * 4, ' ');
     printNode(n);
+    std::cout << "\n";
     
     // Print the left side (represented as lower)
     print_helper(depth + 1, n->get_c1());
