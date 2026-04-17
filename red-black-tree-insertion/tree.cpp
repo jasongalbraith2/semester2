@@ -65,12 +65,12 @@ void TreeOperation::insert(Tree* tree, const unsigned short int nodeVal) {
     
     // Red Black Tree insert cases
     // If the uncle is red, change parent and uncle to black
-    Node* uncle;
+    Node* uncle = nullptr;
     Node* grandpa = parent->get_pa();
-    if (nn->get_pa() == grandpa->get_c1() && grandpa->get_c2()) uncle = grandpa->get_c2();
+    if (parent == grandpa->get_c1()) uncle = grandpa->get_c2();
     else if (grandpa->get_c1()) uncle = grandpa->get_c1();
     
-    if (uncle->get_color() && uncle) {
+    if (uncle && uncle->get_color()) {
         uncle->set_color(false);
         parent->set_color(false);
         
@@ -81,18 +81,22 @@ void TreeOperation::insert(Tree* tree, const unsigned short int nodeVal) {
         switch(determine_rotation(nn, parent, grandpa)) {
             case LL: {
                 LL_rotation(nn, parent, grandpa);
+                if (!parent->get_pa()) tree->set_root(parent);
                 break;
             }
             case LR: {
                 LR_rotation(nn, parent, grandpa);
+                if (!nn->get_pa()) tree->set_root(nn);
                 break;
             }
             case RR: {
                 RR_rotation(nn, parent, grandpa);
+                if (!parent->get_pa()) tree->set_root(parent);
                 break;
             }
             case RL: {
                 RL_rotation(nn, parent, grandpa);
+                if (!nn->get_pa()) tree->set_root(nn); 
                 break;
             }
             default: {
@@ -101,6 +105,8 @@ void TreeOperation::insert(Tree* tree, const unsigned short int nodeVal) {
             }
         }
     }
+
+    if (tree->get_root()) tree->get_root()->set_color(false);
 }
 void TreeOperation::insert_str(Tree* tree, const std::string& tokens) {
     std::istringstream iss(tokens);
@@ -157,17 +163,29 @@ void LL_rotation(Node* child, Node* parent, Node* grandpa) {
     // My own words: move G to the right (c2) and pull parent and child up
     //Node* T1 = child->get_c1();
     //Node* T2 = child->get_c2();
+    Node* god = grandpa->get_pa();
     Node* T3 = parent->get_c2();
     
-    grandpa->set_c1(T3);
-    T3->set_pa(grandpa);
-    grandpa->set_color(true);
+    // If exists assign third child to grandpa (rotate)
+    if (T3) T3->set_pa(grandpa);   
     
-    parent->set_c2(grandpa);
-    parent->set_pa(grandpa->get_pa());
-    parent->set_color(false);
-    
+    // First exchange parent/grandpa information
+    parent->set_pa(god); // flag <----
+    if (god) {
+        if (god->get_c1() == grandpa) god->set_c1(parent);
+        else if (god->get_c2() == grandpa) god->set_c2(parent);
+    }
     grandpa->set_pa(parent);
+    parent->set_c2(grandpa);
+
+    // Assign children
+    grandpa->set_c1(T3);
+
+    // Assign colors
+    parent->set_color(true);
+    grandpa->set_color(false);
+
+    return;
 }
 void LR_rotation(Node* child, Node* parent, Node* grandpa) {
     // Case 2: Left Right Case (LR rotation)
@@ -176,57 +194,79 @@ void LR_rotation(Node* child, Node* parent, Node* grandpa) {
     // then perform LL rotation
     //Node* T1 = parent->get_c1();
     Node* T2 = child->get_c1();
-    //Node* T3 = child->get_c2();
+    Node* T3 = child->get_c2();
     
-    // Reassign parents
-    child->set_pa(grandpa);
-    parent->set_pa(child);
-    
-    // Swap children
+    // Perform initial rotation (to the leeeft)
     parent->set_c2(T2);
-    T2->set_pa(parent);
-    
+    if (T2) T2->set_pa(parent);
+
+    // Perform exchanges
     child->set_c1(parent);
-    
+    parent->set_pa(child);
+    grandpa->set_c1(T3);
+    grandpa->set_pa(child);
+
+    // If the child exists connect it back to grandpa
+    if (T3) T3->set_pa(grandpa);
+        
     // Perform LL rotation
     LL_rotation(parent, child, grandpa);
 }
 void RR_rotation(Node* child, Node* parent, Node* grandpa) {
     // Case 3: Right Right Case (RR rotation)
     // My own words: move parent up, move grandpa to the right
+    Node* god = grandpa->get_pa();
     Node* T3 = parent->get_c1();
     
-    // Reassign parents
-    parent->set_pa(grandpa->get_pa());
+    // Check for existence of children and if so assign parent
+    if (T3) T3->set_pa(grandpa);
+    parent->set_pa(god);
+
+    // Assign god's child by determining which child it is
+    if (god) {
+        if (god->get_c1() == grandpa) god->set_c1(parent);
+        else if (god->get_c2() == grandpa) god->set_c2(parent);
+    }
+    
+    // Assign parents and children
     grandpa->set_pa(parent);
-    
-    // Swap children
-    grandpa->set_c2(T3);
-    T3->set_pa(grandpa);
-    
-    // Finish parent assignments
     parent->set_c1(grandpa);
+    grandpa->set_c2(T3);
+
+    // Assign colors
+    parent->set_color(true);
+    grandpa->set_color(false);
 }
 void RL_rotation(Node* child, Node* parent, Node* grandpa) { 
     // Case 4: Right Left Case (RL rotation)
     // My own words: Swap parent and child and
     // then perform RR case
+    Node* T3 = child->get_c1(); // random name
     Node* T4 = child->get_c2();
+    // Node* god = grandpa->get_pa(); // is this needed?
     
-    // Reassign parents
-    child->set_pa(grandpa);
-    parent->set_pa(child);
-    
-    // Swap children
-    parent->set_c2(T4);
-    T4->set_pa(parent);
-    
+    // Perform the initial rotation (to the riiiight)
+    parent->set_c1(T4);
+
+    // Obviously if it exists then set the new parent
+    if (T4) T4->set_pa(parent);
+
+    // Exchange between child/parent
     child->set_c2(parent);
-    
+    parent->set_pa(child);
+
+    // Create connections between T3 child and grandpa
+    grandpa->set_c2(T3);
+
+    // If it exists, set the new parent
+    if (T3) T3->set_pa(grandpa);
+
+    // Perform exchanges between grandpa & child
+    child->set_pa(grandpa);
+    grandpa->set_c2(child);
+
     // Perform RR
     RR_rotation(parent, child, grandpa);
-    
-    return; 
 }
 void print_helper(const unsigned int depth, Node* n) {
     if (!n) return;
