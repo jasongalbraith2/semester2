@@ -48,6 +48,7 @@ void TreeOperation::insert(Tree* tree, const unsigned short int nodeVal) {
     if (tree->get_root() == nullptr) {
         Node* nn = new Node();
         nn->set_value(nodeVal);
+        nn->set_color(false);
         tree->set_root(nn);
         return;
     }
@@ -68,16 +69,19 @@ void TreeOperation::insert(Tree* tree, const unsigned short int nodeVal) {
     Node* uncle = nullptr;
     Node* grandpa = parent->get_pa();
     if (parent == grandpa->get_c1()) uncle = grandpa->get_c2();
-    else if (grandpa->get_c1()) uncle = grandpa->get_c1();
+    else uncle = grandpa->get_c1();
     
     if (uncle && uncle->get_color()) {
         uncle->set_color(false);
         parent->set_color(false);
         
         // If the grandpa is not the root then set it to red
-        if (grandpa != tree->get_root()) grandpa->set_color(false);
+        if (grandpa != tree->get_root()) grandpa->set_color(true);
     }
-    else if (uncle) {
+    else if (!parent->get_color()) {
+        return;
+    }
+    else {
         switch(determine_rotation(nn, parent, grandpa)) {
             case LL: {
                 LL_rotation(nn, parent, grandpa);
@@ -182,8 +186,8 @@ void LL_rotation(Node* child, Node* parent, Node* grandpa) {
     grandpa->set_c1(T3);
 
     // Assign colors
-    parent->set_color(true);
-    grandpa->set_color(false);
+    parent->set_color(false);
+    grandpa->set_color(true);
 
     return;
 }
@@ -203,11 +207,12 @@ void LR_rotation(Node* child, Node* parent, Node* grandpa) {
     // Perform exchanges
     child->set_c1(parent);
     parent->set_pa(child);
-    grandpa->set_c1(T3);
-    grandpa->set_pa(child);
+
+    child->set_pa(grandpa);
+    grandpa->set_c1(child);
 
     // If the child exists connect it back to grandpa
-    if (T3) T3->set_pa(grandpa);
+    //if (T3) T3->set_pa(grandpa);
         
     // Perform LL rotation
     LL_rotation(parent, child, grandpa);
@@ -234,8 +239,8 @@ void RR_rotation(Node* child, Node* parent, Node* grandpa) {
     grandpa->set_c2(T3);
 
     // Assign colors
-    parent->set_color(true);
-    grandpa->set_color(false);
+    parent->set_color(false);
+    grandpa->set_color(true);
 }
 void RL_rotation(Node* child, Node* parent, Node* grandpa) { 
     // Case 4: Right Left Case (RL rotation)
@@ -246,20 +251,21 @@ void RL_rotation(Node* child, Node* parent, Node* grandpa) {
     // Node* god = grandpa->get_pa(); // is this needed?
     
     // Perform the initial rotation (to the riiiight)
-    parent->set_c1(T4);
+    parent->set_c1(T3);
 
     // Obviously if it exists then set the new parent
-    if (T4) T4->set_pa(parent);
+    if (T3) T3->set_pa(parent);
 
     // Exchange between child/parent
     child->set_c2(parent);
     parent->set_pa(child);
 
     // Create connections between T3 child and grandpa
-    grandpa->set_c2(T3);
+    child->set_pa(grandpa);
+    grandpa->set_c2(child);
 
     // If it exists, set the new parent
-    if (T3) T3->set_pa(grandpa);
+    //if (T3) T3->set_pa(grandpa);
 
     // Perform exchanges between grandpa & child
     child->set_pa(grandpa);
