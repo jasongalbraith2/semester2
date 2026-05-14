@@ -18,7 +18,7 @@ class Tree {
 };
 
 namespace TreeOperation {
-    void insert(Tree* tree, const unsigned short int nodeVal);
+    void insert(Tree* tree, const unsigned short int v);
     void insert_str(Tree* tree, const std::string& tokens);
     bool search(Tree* tree, const std::string& token);
     void clear(Tree* tree);
