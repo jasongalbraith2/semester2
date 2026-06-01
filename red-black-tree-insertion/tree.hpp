@@ -19,12 +19,14 @@ class Tree {
 
 // Internal functinos to share w/ tree_opp
 void insert(Tree* tree, const unsigned short int v);
-void clear_helper(Node* n);
-void print_helper(Node* n, const unsigned int depth);
+
+// share with tree_del
+void LL_rotation(Node* child, Node* parent, Node* grandpa);
+void RR_rotation(Node* child, Node* parent, Node* grandpa);
 
 namespace TreeOperation {
     void insert_str(Tree* tree, const std::string& tokens);
-    void remove(Tree* tree, const unsigned short int v);
+    Node* remove(Tree* tree, const unsigned short int v);
     bool search(Tree* tree, const std::string& token);
     void clear(Tree* tree);
 }

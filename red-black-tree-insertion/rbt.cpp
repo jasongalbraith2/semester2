@@ -24,6 +24,7 @@ int main() {
     Tree tree;
 
     std::string command;
+    unsigned int num;
     Command result;
     bool running = true;
     do {
@@ -59,11 +60,10 @@ int main() {
                 break;
             }
             case DELETE: {
-                /*
                 std::cout << "[del] Enter number to delete > ";
-                std::getline(std::cin, command);
-                tree.del(command);
-                */
+                std::cin >> num;
+                RBTO::remove(&tree, num);
+                std::cin.ignore(); // ignore the newline character after the number input
                 break;
             }
             case QUIT: {

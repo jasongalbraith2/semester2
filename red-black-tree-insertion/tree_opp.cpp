@@ -7,6 +7,9 @@
 #include "utils.hpp"
 #include "node.hpp"
 
+void print_helper(Node* n, const unsigned int depth);
+void clear_helper(Node* n);
+
 /* ----- Create Tree Functions ----- */
 Tree::Tree() { root = nullptr; }
 Tree::~Tree() { TreeOperation::clear(this); }
@@ -28,8 +31,11 @@ void TreeOperation::insert_str(Tree* tree, const std::string& tokens) {
     while (std::getline(iss, token, ' ')) {
         if (is_number(token)) {
             num = std::stoi(token);
-            if (num >= 1 && num <= 999) insert(tree, num);
-            else std::cout << "[inner-func] Number out of range (1-999): " << num << "\n";
+            if (num >= 1 && num <= 999) {
+                insert(tree, num);
+                tree->get_root()->set_color(false);
+            }
+            else std::cout << "[tree] Number out of range (1-999): " << num << "\n";
         }
     }
 }
@@ -58,4 +64,30 @@ void TreeOperation::clear(Tree* tree) {
     
     // If the root exists, set the root to nullptr
     tree->set_root(nullptr);
+}
+void print_helper(Node* n, const unsigned int depth) {
+    if (!n) return;
+    
+    // Print the right side (represented as upper)
+    print_helper(n->get_c2(), depth + 1);
+    
+    // Indent based on current depth and print
+    // the current node value
+    std::cout << "[tree] " << std::string(depth * 4, ' ');
+    printNode(n);
+    std::cout << "\n";
+    
+    // Print the left side (represented as lower)
+    print_helper(n->get_c1(), depth + 1);
+}
+void clear_helper(Node* n) {
+    // If the node does not exist return
+    if (!n) return;
+    
+    // Else if the children exist clear the children
+    if (n) {
+        if (n->get_c1()) clear_helper(n->get_c1());
+        if (n->get_c2()) clear_helper(n->get_c2());
+        delete n;
+    }
 }
